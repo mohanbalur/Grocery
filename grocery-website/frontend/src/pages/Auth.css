@@ -1,0 +1,257 @@
+/* =========================
+   COLOR SYSTEM (E-COMMERCE)
+========================= */
+
+:root {
+  --card-bg: linear-gradient(
+    135deg,
+    #ffffff,
+    #f8fafc,
+    #f1f5f9
+  );
+
+  --primary: #16a34a;        /* Green – CTA */
+  --primary-dark: #15803d;
+
+  --accent-blue: #2563eb;   /* Trust */
+  --text-main: #111827;
+  --text-muted: #6b7280;
+
+  --border: #e5e7eb;
+  --input-bg: #ffffff;
+
+  --error: #dc2626;
+}
+
+/* =========================
+   AUTH CARD ONLY (NO PAGE BG)
+========================= */
+
+.form-box {
+  max-width: 420px;
+  margin: 60px auto;
+  padding: 32px 26px;
+  background: var(--card-bg);
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  animation: cardFade 0.6s ease;
+}
+
+@keyframes cardFade {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-box h2 {
+  text-align: center;
+  font-size: 26px;
+  margin-bottom: 26px;
+  color: var(--text-main);
+  letter-spacing: 0.3px;
+}
+
+/* =========================
+   FORM LAYOUT
+========================= */
+
+.form-box form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* =========================
+   FLOATING INPUTS
+========================= */
+
+.input-group {
+  position: relative;
+  margin-bottom: 18px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 15px 14px;
+  font-size: 15px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text-main);
+  outline: none;
+  transition: all 0.25s ease;
+}
+
+.input-group input:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.input-group label {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+.input-group input:focus + label,
+.input-group input:not(:placeholder-shown) + label {
+  top: -7px;
+  font-size: 12px;
+  padding: 0 6px;
+  background: #ffffff;
+  color: var(--accent-blue);
+}
+
+/* =========================
+   PASSWORD FIELD
+========================= */
+
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  padding-right: 74px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-blue);
+  cursor: pointer;
+}
+
+/* =========================
+   FORGOT PASSWORD
+========================= */
+
+.forgot-row {
+  text-align: right;
+  margin-bottom: 18px;
+}
+
+.forgot-row span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-blue);
+  cursor: pointer;
+}
+
+.forgot-row span:hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   PRIMARY BUTTON (CTA)
+========================= */
+
+.form-box button {
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(
+    135deg,
+    var(--primary),
+    var(--primary-dark)
+  );
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.form-box button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(22, 163, 74, 0.35);
+}
+
+.form-box button:active {
+  transform: scale(0.97);
+}
+
+/* =========================
+   AUTH LINKS
+========================= */
+
+.auth-link {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.auth-link span {
+  color: var(--accent-blue);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth-link span:hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   INFO / ERROR
+========================= */
+
+.info-text {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--primary);
+}
+
+.error-text {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--error);
+}
+
+/* =========================
+   SHAKE ERROR
+========================= */
+
+.form-box.shake {
+  animation: shake 0.35s ease;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(6px); }
+  75% { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 480px) {
+  .form-box {
+    margin: 40px 16px;
+    padding: 24px 18px;
+  }
+
+  .form-box h2 {
+    font-size: 22px;
+  }
+}
