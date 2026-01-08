@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: "https://grocery-llkq.onrender.com/api",
 });
 
 /* ✅ Always read token from userInfo */
