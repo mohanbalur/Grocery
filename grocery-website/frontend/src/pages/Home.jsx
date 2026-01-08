@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { fetchProducts } from "../api/product.api.js";
 import { fetchCategories } from "../api/category.api.js";
-import { addToCart } from "../api/cart.api.js";
+import {
+  fetchCart,
+  addToCart,
+  removeFromCart,
+} from "../api/cart.api.js";
 import { useNavigate } from "react-router-dom";
 import "./Home.css";
 
@@ -9,17 +13,13 @@ const Home = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState("");
-  const [quantities, setQuantities] = useState({});
   const [selectedCategory, setSelectedCategory] = useState(null);
-  
-  // 🔑 hamburger toggle
-  const [showCategories, setShowCategories] = useState(false);
 
+  // ✅ REQUIRED cart state (same as Cart.jsx)
+  const [cart, setCart] = useState({ items: [] });
+
+  const [showCategories, setShowCategories] = useState(false);
   const [showCartBar, setShowCartBar] = useState(false);
-  const [cartSummary, setCartSummary] = useState({
-    count: 0,
-    total: 0,
-  });
 
   const navigate = useNavigate();
   const isLoggedIn = !!localStorage.getItem("token");
@@ -27,25 +27,40 @@ const Home = () => {
   useEffect(() => {
     loadProducts();
     loadCategories();
+    loadCart();
   }, []);
 
+  /* =========================
+     LOADERS
+  ========================= */
   const loadProducts = async () => {
     const res = await fetchProducts();
-    setProducts(res.data);
-
-    const qty = {};
-    res.data.forEach((p) => (qty[p._id] = 1));
-    setQuantities(qty);
+    setProducts(res.data || []);
   };
 
   const loadCategories = async () => {
     const res = await fetchCategories();
-    setCategories(res.data);
+    setCategories(res.data || []);
   };
 
+  const loadCart = async () => {
+    try {
+      const res = await fetchCart();
+      setCart(res.data || { items: [] });
+      setShowCartBar(res.data?.items?.length > 0);
+    } catch {
+      setCart({ items: [] });
+      setShowCartBar(false);
+    }
+  };
+
+  /* =========================
+     FILTERING
+  ========================= */
   const filteredProducts = products.filter((p) => {
-    const matchSearch =
-      p.name.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = p.name
+      .toLowerCase()
+      .includes(search.toLowerCase());
 
     const matchCategory =
       !selectedCategory || p.category?._id === selectedCategory;
@@ -53,66 +68,83 @@ const Home = () => {
     return matchSearch && matchCategory;
   });
 
-  const increaseQty = (id) => {
-    setQuantities((prev) => ({
-      ...prev,
-      [id]: (prev[id] || 1) + 1,
-    }));
+  /* =========================
+     CART HELPERS (same logic as Cart.jsx)
+  ========================= */
+  const getCartQty = (productId) => {
+    const item = cart?.items?.find(
+      (i) => i?.product?._id === productId
+    );
+    return item ? item.quantity : 0;
   };
-  
-  const decreaseQty = (id) => {
-    setQuantities((prev) => ({
-      ...prev,
-      [id]: Math.max(1, (prev[id] || 1) - 1),
-    }));
+
+  const increaseQty = async (productId) => {
+    if (!isLoggedIn) {
+      navigate("/login");
+      return;
+    }
+    await addToCart(productId);
+    loadCart();
   };
-  
+
+  const decreaseQty = async (productId) => {
+    await removeFromCart(productId);
+    loadCart();
+  };
+
   const handleAddToCart = async (product) => {
     if (!isLoggedIn) {
       navigate("/login");
       return;
     }
-  
-    const qty = quantities[product._id] || 1;
-  
-    // ✅ SHOW STICKY CART (optimistic UI)
-    setCartSummary((prev) => ({
-      count: prev.count + qty,
-      total: prev.total + product.price * qty,
-    }));
-    setShowCartBar(true);
-  
-    try {
-      // backend supports +1 only → loop
-      for (let i = 0; i < qty; i++) {
-        await addToCart(product._id);
-      }
-    } catch (err) {
-      console.error("Add to cart failed:", err);
-    }
+    await addToCart(product._id);
+    loadCart();
   };
-  
 
+  /* =========================
+     SAFE CART TOTALS
+  ========================= */
+  const safeCartItems = Array.isArray(cart?.items)
+    ? cart.items.filter(
+        (item) => item && item.product && item.quantity > 0
+      )
+    : [];
+
+  const cartCount = safeCartItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
+
+  const cartTotal = safeCartItems.reduce(
+    (sum, item) =>
+      sum + item.quantity * item.product.price,
+    0
+  );
+
+  /* =========================
+     RENDER
+  ========================= */
   return (
     <div className="page home-page">
-      <div className={`home-layout ${showCategories ? "with-sidebar" : ""}`}>
-        
+      <div className="home-layout">
         {/* LEFT SIDEBAR */}
         {showCategories && (
           <aside className="category-sidebar">
             <h4>Categories</h4>
-  
+
             <div
               className={!selectedCategory ? "active" : ""}
               onClick={() => setSelectedCategory(null)}
             >
               All Products
             </div>
-  
+
             {categories.map((cat) => (
               <div
                 key={cat._id}
-                className={selectedCategory === cat._id ? "active" : ""}
+                className={
+                  selectedCategory === cat._id ? "active" : ""
+                }
                 onClick={() => setSelectedCategory(cat._id)}
               >
                 {cat.name}
@@ -120,48 +152,9 @@ const Home = () => {
             ))}
           </aside>
         )}
-  
+
         {/* MAIN CONTENT */}
         <main className="home-main">
-          {/* HERO / BANNER (UI ONLY) */}
-          <section className="home-hero" aria-label="Welcome banner">
-            <div className="hero-overlay" />
-            <div className="hero-content">
-              <p className="hero-eyebrow">Fresh • Fast • Eco-friendly</p>
-              <h1 className="hero-title">Groceries delivered to your door</h1>
-              <p className="hero-subtitle">
-                Discover fresh fruits, vegetables, pantry essentials, and daily needs —
-                curated for quality and delivered quickly.
-              </p>
-              <div className="hero-actions">
-                <a className="hero-cta" href="#products">Shop products</a>
-                <button
-                  type="button"
-                  className="hero-secondary"
-                  onClick={() => setShowCategories(true)}
-                >
-                  Browse categories
-                </button>
-              </div>
-            </div>
-
-            <div className="hero-stats" aria-label="Store highlights">
-              <div className="stat">
-                <span className="stat-number">1000+</span>
-                <span className="stat-label">Products</span>
-              </div>
-              <div className="stat">
-                <span className="stat-number">Fresh</span>
-                <span className="stat-label">Daily stock</span>
-              </div>
-              <div className="stat">
-                <span className="stat-number">Fast</span>
-                <span className="stat-label">Delivery</span>
-              </div>
-            </div>
-          </section>
-          
-          {/* HEADER ROW */}
           <div className="home-header">
             <button
               className="hamburger-btn"
@@ -169,11 +162,9 @@ const Home = () => {
             >
               ☰
             </button>
-  
             <h2 className="home-title">Products</h2>
           </div>
-  
-          {/* SEARCH */}
+
           <div className="search-box">
             <span className="search-icon">🔍</span>
             <input
@@ -183,53 +174,71 @@ const Home = () => {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-  
-          {/* PRODUCTS GRID */}
-          <div id="products" className="products-grid">
-            {filteredProducts.map((p) => (
-              <div key={p._id} className="product-banner">
-              <div className="banner-image">
-                <img
-                    src={p.image}
-                    alt={p.name}
-                    loading="lazy"
-                />
-              </div>
- 
-  
-                <div className="banner-content">
-                  <h3>{p.name}</h3>
-                  <p className="product-price">₹{p.price} / {p.quantityValue} {p.quantityUnit}</p>
-                  <div className="qty-cart-row">
-                    <div className="qty-controller">
-                        <button onClick={() => decreaseQty(p._id)}>−</button>
-                        <span>{quantities[p._id] || 1}</span>
-                        <button onClick={() => increaseQty(p._id)}>+</button>
-                    </div>
 
-                    <button
-                      className="add-btn full"
-                      onClick={() => handleAddToCart(p)}
-                    >
-                      Add
-                    </button>
+          {/* PRODUCTS GRID */}
+          <div className="products-grid">
+            {filteredProducts.map((p) => {
+              const qty = getCartQty(p._id);
+
+              return (
+                <div key={p._id} className="product-banner">
+                  <div className="banner-image">
+                    <img src={p.image} alt={p.name} />
                   </div>
 
+                  <div className="banner-content">
+                    <h3>{p.name}</h3>
+                    <p className="product-price">
+                      ₹{p.price} / {p.quantityValue}{" "}
+                      {p.quantityUnit}
+                    </p>
+
+                    <div className="qty-cart-row">
+                      {qty > 0 ? (
+                        <div className="qty-controller">
+                          <button
+                            onClick={() =>
+                              decreaseQty(p._id)
+                            }
+                          >
+                            −
+                          </button>
+                          <span>{qty}</span>
+                          <button
+                            onClick={() =>
+                              increaseQty(p._id)
+                            }
+                          >
+                            +
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          className="add-btn full"
+                          onClick={() =>
+                            handleAddToCart(p)
+                          }
+                        >
+                          Add
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </main>
       </div>
-  
-      {/* STICKY CART BAR */}
-      {showCartBar && (
+
+      {/* STICKY CART */}
+      {showCartBar && cartCount > 0 && (
         <div className="cart-toast">
           <span>
-            <strong>{cartSummary.count} item(s)</strong> | ₹
-            {cartSummary.total.toFixed(2)}
+            <strong>{cartCount} item(s)</strong> | ₹
+            {cartTotal.toFixed(2)}
           </span>
-  
+
           <button
             className="view-cart-btn"
             onClick={() => navigate("/cart")}
@@ -241,6 +250,5 @@ const Home = () => {
     </div>
   );
 };
-  
 
 export default Home;

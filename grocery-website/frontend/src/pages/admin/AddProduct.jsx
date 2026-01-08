@@ -16,7 +16,7 @@ const AddProduct = ({ onProductAdded }) => {
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
 
-  // ✅ fetch categories once
+  // fetch categories once
   useEffect(() => {
     fetchCategories()
       .then((res) => setCategories(res.data))
@@ -34,23 +34,29 @@ const AddProduct = ({ onProductAdded }) => {
 
   const handlesubmit = async (e) => {
     e.preventDefault();
-  
+
     try {
       const formData = new FormData();
       formData.append("name", form.name);
       formData.append("price", form.price);
       formData.append("category", form.category);
       formData.append("quantityValue", form.quantityValue);
-      formData.append("quantityUnit", form.quantityUnit); 
+      formData.append("quantityUnit", form.quantityUnit);
 
       if (image) {
         formData.append("image", image);
       }
-  
+
       await addProduct(formData);
-  
+
       alert("Product added");
-      setForm({ name: "", price: "", category: "" , quantityValue: "", quantityUnit: "kg",});
+      setForm({
+        name: "",
+        price: "",
+        category: "",
+        quantityValue: "",
+        quantityUnit: "kg",
+      });
       setImage(null);
       setPreview(null);
       onProductAdded?.();
@@ -58,7 +64,6 @@ const AddProduct = ({ onProductAdded }) => {
       alert(err.response?.data?.message || "Add product failed");
     }
   };
-  
 
   return (
     <div className="add-product-wrapper">
@@ -93,24 +98,23 @@ const AddProduct = ({ onProductAdded }) => {
               setForm({ ...form, quantityValue: e.target.value })
             }
             required
-        />
+          />
 
-        <select
-          value={form.quantityUnit}
-          onChange={(e) =>
-            setForm({ ...form, quantityUnit: e.target.value })
-          }
-        >
-          <option value="kg">kg</option>
-          <option value="g">g</option>
-          <option value="piece">piece</option>
-          <option value="ml">ml</option>
-          <option value="l">l</option>
-        </select>
-      </div>
+          <select
+            value={form.quantityUnit}
+            onChange={(e) =>
+              setForm({ ...form, quantityUnit: e.target.value })
+            }
+          >
+            <option value="kg">kg</option>
+            <option value="g">g</option>
+            <option value="piece">piece</option>
+            <option value="ml">ml</option>
+            <option value="l">l</option>
+          </select>
+        </div>
 
-
-        {/* ✅ CATEGORY DROPDOWN (UPDATED) */}
+        {/* Category */}
         <select
           value={form.category}
           onChange={(e) =>
@@ -127,23 +131,30 @@ const AddProduct = ({ onProductAdded }) => {
         </select>
 
         {/* Image Upload */}
-        <label className="image-upload">
-          Click to upload product image
-          <input
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={handleImageChange}
-          />
-        </label>
+        <div className="image-section"></div>
+          <label className="image-upload">
+            Click to upload product image
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={handleImageChange}
+            />
+          </label>
 
-        {preview && (
-          <div className="image-preview">
-            <img src={preview} alt="Preview" />
-          </div>
-        )}
+          {preview && (
+            <div className="image-preview">
+              <img src={preview} alt="Preview" />
+            </div>
+          )}
+        
 
-        <button className="add-product-btn">Add Product</button>
+        {/* BUTTON WRAPPER FOR CENTERING */}
+        <div className="add-product-btn-wrapper">
+          <button className="add-product-btn">
+            Add Product
+          </button>
+        </div>
       </form>
     </div>
   );
