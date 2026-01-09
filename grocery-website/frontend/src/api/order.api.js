@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://grocery-llkq.onrender.com/api",
+  baseURL: `${import.meta.env.VITE_API_URL}/api`,
 });
 
 /* ✅ Always read token from userInfo */

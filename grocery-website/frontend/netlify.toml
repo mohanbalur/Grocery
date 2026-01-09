@@ -1,0 +1,4 @@
+[build]
+base = "grocery-website/frontend"
+command = "npm run build"
+publish = "dist"
