@@ -1,4 +1,4 @@
-import API from "./api";
+import API from "./api.js";
 
 export const addProduct = (data) => API.post("/products", data);
 export const fetchProducts = () => API.get("/products");
