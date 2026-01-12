@@ -1,19 +1,4 @@
-import axios from "axios";
-
-const API = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL}/api`,
-});
-
-/* ✅ Always read token from userInfo */
-API.interceptors.request.use((req) => {
-  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-
-  if (userInfo?.token) {
-    req.headers.Authorization = `Bearer ${userInfo.token}`;
-  }
-
-  return req;
-});
+import API from "./api";
 
 export const placeOrder = (data) => API.post("/orders",data);
 export const fetchMyOrders = () => API.get("/orders/my");
